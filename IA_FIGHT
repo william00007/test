@@ -16,6 +16,7 @@ var enemy = getNearestEnemy();
 showLogs();
 showCases(enemy);
 
+// ajout du com
 if (etat != 0){
 	etat = getEtat(enemy);
 	debug(canUseChip(enemy,CHIP_SPARK));
