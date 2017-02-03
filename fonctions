@@ -1,0 +1,185 @@
+global INIT = 0;
+global PREPARATION = 4;
+global KITE = 1;
+global FIGHT = 2;
+global FUIR = 3;
+global APPROCHER_PRUDEMENT = 5;
+
+global etat = 0;
+
+global lastLife = getLife();
+global lastHit = 0 ;
+global isHurt = false;
+global enemyLife = -1;
+
+
+function showCases(enemy){
+	var cellsSpark = getCellsToUseChip(CHIP_SPARK, enemy);
+	mark(cellsSpark, COLOR_BLUE);
+	var cellsWeapon = getCellsToUseWeapon(getWeapon(), enemy);
+	mark(cellsWeapon, COLOR_RED);
+}
+
+function showEtat(){
+	if(etat == INIT)
+		debug("Etat : INIT");
+	if(etat == PREPARATION)
+		debug("Etat : PREPARATION");
+	if(etat == KITE)
+		debug("Etat : KITE");
+	if(etat == FUIR)
+		debug("Etat : FUIR");
+	if(etat == FIGHT)
+		debug("Etat : FIGHT");
+	if(etat == APPROCHER_PRUDEMENT)
+		debug("Etat : APPROCHER_PRUDEMENT");
+}
+
+// à voir
+function canUseChipOnMeNextTurn(chip, enemy){
+	var cellDanger = getCellToUseChip(chip, enemy);
+	if(getCellDistance(cellDanger, getCell()) <= getMP(enemy)){
+		return true;
+	}
+	else
+		return false;
+}
+
+function goToLimit(enemy){ // va à la limite + 1 à voir
+	var distMarge = getDistance(getCell(enemy), getCell()) - getChipMaxRange(CHIP_SPARK) - getMP(enemy) - 1 ;
+	debug("go to limit");
+	showLogs();
+	debug("distMarge : " + distMarge);
+	debug("---------------------------");
+	if(distMarge   > 0)
+			moveToward(enemy, distMarge);
+	if(distMarge   < 0)
+			moveAwayFrom(enemy, -distMarge);
+	
+}
+// renvoie -1 ou la case
+function getClosestCellToChip(chip, enemy){
+	var bestCell = getCellToUseChip(chip, enemy);
+	if (getCellDistance(getCell(), bestCell) > getMP()) {
+		return -1;
+	}
+	else
+		return bestCell;
+}
+
+function getClosestCellToWeapon(weapon, enemy){
+	var bestCell = getCellToUseWeapon(weapon, enemy);
+	if (getCellDistance(getCell(), bestCell) > getMP()) {
+		return -1;
+	}
+	else
+		return bestCell;
+}
+// si l'enemy est attackable avec l'arme true / false
+function isAttackableWeapon(enemy, weapon){
+
+	var cellsToUseWeapon = getCellsToUseWeapon(enemy);
+	for (var i in cellsToUseWeapon){
+		if (getCellDistance(getCell(), i) <= 3) {
+			return true;
+		}
+	}
+	return false;
+}
+// si l'enemy est attackable avec spark true / false
+function isAttackableSpark(enemy){
+	var cellsToUseSpark = getCellsToUseChip(CHIP_SPARK, enemy);
+
+	for (var i in cellsToUseSpark){
+		if (getCellDistance(getCell(), i) <= 3) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+// Renvoie l'état suivant
+function getEtat(enemy){
+	if (etat == INIT ) {
+		return APPROCHER_PRUDEMENT;		
+	}
+	else if (etat == APPROCHER_PRUDEMENT){
+		if (canUseChipOnMeNextTurn(CHIP_SPARK,enemy) == false) {
+			return APPROCHER_PRUDEMENT;
+		}
+		else
+			return PREPARATION;
+	}
+		
+	else if (etat == PREPARATION) {
+		if (getClosestCellToChip(CHIP_SPARK, enemy) != -1) {
+			return KITE;
+		}
+		else
+			return PREPARATION;
+	}
+	else if (etat == KITE){
+		if(isAttackableWeapon(enemy, getWeapon())) 
+			return FIGHT;
+		else
+			return KITE;
+	}
+	else if (etat == FIGHT){
+		if(isAttackableWeapon(enemy, getWeapon())) 
+			return FIGHT;
+		else
+			return KITE;
+	}
+	else{
+		debug("ERROR ");
+		return FUIR;
+	}
+		
+}
+
+function useBuff(){
+	useChip(CHIP_SHIELD, getLeek());
+	useChip(CHIP_HELMET, getLeek());
+}
+function attack(enemy){
+	var currentLife = getLife(enemy);
+	var hitDamage = 0;
+	var hits = 0;
+	for (var i = 0; i < floor(getTP()/getWeaponCost(getWeapon())) -1; i++) {
+		useWeapon(enemy);	
+		hitDamage = hitDamage + currentLife - getLife(enemy);
+		currentLife = getLife(enemy);
+		hits = hits + 1;
+	}
+	hitDamage = hitDamage / hits;
+	if(getLife(enemy) < hitDamage)
+		useWeapon(enemy);
+	else
+		useBuff();
+	usePTLeft(enemy);
+}
+function usePTLeft(enemy){
+	for (var i = 0; i < getTP(); i++) {
+		useWeapon(enemy);		
+	}
+	for (var i = 0; i < getTP(); i++) {
+		useChip(CHIP_SPARK, enemy);
+	}
+}
+
+function monChalala(enemy){
+	var monTableau = ["Hi, good luck and have fun","Thanks for lvling me"," I will find you and I will kill you","Hmm you are just lvl "+getLevel(enemy),"Oh, sh!t you really sck","Pouahahahah","It's over'","Come on ! Fight me","Taste my ding ding dong", "Taste my  tralalal"];
+say(monTableau[(getTurn()-1)%count(monTableau)]);
+}
+
+function showLogs(){
+	var enemy = getNearestEnemy();
+	var distance = getDistance(getCell(), getCell(enemy));
+	debug("TP : "+ getTP());
+	debug("MP : "+getMP());
+	debug("Distance: "+ distance);
+	debug("PathLength : " + getPathLength(getCell(), getCell(enemy)));
+	showEtat();
+}
+
