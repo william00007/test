@@ -37,6 +37,10 @@ else if ( etat == PREPARATION){
 //	useChip(CHIP_MOTIVATION, getLeek());
 	goToLimit(enemy);
 }
+
+else if (etat == 0){
+
+}
 else if ( etat == KITE){
 	var cellToGo = getClosestCellToChip(CHIP_SPARK, enemy);
 	moveTowardCell(cellToGo);
