@@ -1,0 +1,54 @@
+//--------------------------------
+//---------- Base code -----------
+//--------------------------------
+include("fonctions");
+
+// We get the nearest enemy
+var enemy = getNearestEnemy();
+
+ //We move towards him
+
+
+//monChalala(enemy);
+
+
+/* ======================= MAIN ========================= */
+showLogs();
+showCases(enemy);
+
+if (etat != 0){
+	etat = getEtat(enemy);
+	debug(canUseChip(enemy,CHIP_SPARK));
+}
+if (etat == INIT) {
+	if (getWeapon() == null)setWeapon(WEAPON_SHOTGUN); // Warning: costs 1 TP	
+	goToLimit(enemy);
+	etat = APPROCHER_PRUDEMENT;
+	}
+else if ( etat == APPROCHER_PRUDEMENT){
+	goToLimit(enemy);
+}
+
+else if ( etat == PREPARATION){
+	useChip(CHIP_PROTEIN, getLeek());
+	useChip(CHIP_SHIELD, getLeek());
+	useChip(CHIP_HELMET, getLeek());
+//	useChip(CHIP_MOTIVATION, getLeek());
+	goToLimit(enemy);
+}
+else if ( etat == KITE){
+	var cellToGo = getClosestCellToChip(CHIP_SPARK, enemy);
+	moveTowardCell(cellToGo);
+	useChip(CHIP_SHIELD, getLeek());
+	usePTLeft(enemy);
+	goToLimit(enemy);
+	}
+else if ( etat == FIGHT){
+	var cellToGo = getClosestCellToWeapon(getWeapon(), enemy);
+	moveTowardCell(cellToGo);
+	attack(enemy);
+	goToLimit(enemy);
+	}
+showLogs();	
+
+
